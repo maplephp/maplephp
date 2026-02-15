@@ -8,5 +8,5 @@ use App\Controllers\HelpController;
 // $router->map(["", "test", "run"], [RunTestController::class, "run"])->with(TestMiddleware::class)
 
 return $router
-    ->map("test", [TestController::class, "index"])
+    ->map(["", "run"], [TestController::class, "index"])
     ->map(["__404", "help"], [HelpController::class, "index"]);
