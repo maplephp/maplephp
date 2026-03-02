@@ -5,7 +5,7 @@
  */
 
 use MaplePHP\Blunder\Handlers\CliHandler;
-use MaplePHP\Unitary\Console\Application;
+use MaplePHP\Core\CliKernel;
 
 $autoload = __DIR__ . '/vendor/autoload.php';
 $autoload = realpath($autoload);
@@ -21,9 +21,7 @@ if (!$autoload || !is_file($autoload)) {
 
 require $autoload;
 
-$app = (new Application())
-  ->withRouter(__DIR__ . "/routers/console.php")
-  ->withConfig(__DIR__ . "/unitary.config.php")
+$app = (new CliKernel(__DIR__))
   ->withErrorHandler(new CliHandler())
   ->boot([
     "argv" => $argv,

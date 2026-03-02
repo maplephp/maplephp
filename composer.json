@@ -17,11 +17,50 @@
       "email": "daniel.ronkainen@wazabii.se"
     }
   ],
+  "scripts": {
+    "test": "vendor/bin/unitary",
+    "serve": [
+      "Composer\\Config::disableProcessTimeout",
+      "@php -S localhost:8000 -t public"
+    ]
+  },
   "require": {
     "php": ">=8.2",
-    "maplephp/unitary": "^v2.1",
-    "maplephp/log": "^v2.0"
+    "maplephp/core": "*"
   },
+  "require-dev": {
+    "maplephp/unitary": "*"
+  },
+  "repositories": [
+    {
+      "type": "path",
+      "url": "/Users/danielronkainen/Dev/libraries/Core",
+      "options": {
+        "symlink": true
+      }
+    },
+    {
+      "type": "path",
+      "url": "/Users/danielronkainen/Dev/libraries/Emitron",
+      "options": {
+        "symlink": true
+      }
+    },
+    {
+      "type": "path",
+      "url": "/Users/danielronkainen/Dev/libraries/Unitary",
+      "options": {
+        "symlink": true
+      }
+    },
+    {
+      "type": "path",
+      "url": "/Users/danielronkainen/Dev/libraries/Http",
+      "options": {
+        "symlink": true
+      }
+    }
+  ],
   "autoload": {
     "psr-4": {
       "App\\": "app/",

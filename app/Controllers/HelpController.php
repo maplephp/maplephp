@@ -2,8 +2,8 @@
 
 namespace App\Controllers;
 
+use MaplePHP\Core\Routing\DefaultController;
 use MaplePHP\Prompts\Themes\Blocks;
-use MaplePHP\Unitary\Console\Controllers\DefaultController;
 
 class HelpController extends DefaultController
 {

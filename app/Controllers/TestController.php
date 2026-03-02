@@ -2,14 +2,12 @@
 
 namespace App\Controllers;
 
-use MaplePHP\Unitary\Console\Controllers\DefaultController;
+use MaplePHP\Core\Routing\DefaultShellController;
 
-class TestController extends DefaultController
+class TestController extends DefaultShellController
 {
-
     public function index(): void
     {
         $this->command->message("HELLO WORLD!!");
     }
-
 }

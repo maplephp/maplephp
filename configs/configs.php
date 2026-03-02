@@ -5,6 +5,8 @@
  */
 
 return [
+    'title' => getenv('APP_TITLE'),
+    'env' => getenv('APP_ENV'),
     'type' => "cli",
     'verbose' => false,
     'timezone' => 'UTC',
