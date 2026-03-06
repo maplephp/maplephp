@@ -26,44 +26,11 @@
   },
   "require": {
     "php": ">=8.2",
-    "maplephp/core": "*"
+    "maplephp/core": "^1.0"
   },
   "require-dev": {
-    "maplephp/unitary": "*"
+    "maplephp/unitary": "^2.1"
   },
-  "repositories": [
-    {
-      "type": "path",
-      "url": "/Users/danielronkainen/Dev/libraries/Core",
-      "options": {
-        "symlink": true
-      }
-    },
-    {
-      "type": "path",
-      "url": "/Users/danielronkainen/Dev/libraries/Emitron",
-      "options": {
-        "symlink": true,
-        "versions": {
-          "maplephp/emitron": "1.1.x-dev"
-        }
-      }
-    },
-    {
-      "type": "path",
-      "url": "/Users/danielronkainen/Dev/libraries/Unitary",
-      "options": {
-        "symlink": true
-      }
-    },
-    {
-      "type": "path",
-      "url": "/Users/danielronkainen/Dev/libraries/Http",
-      "options": {
-        "symlink": true
-      }
-    }
-  ],
   "autoload": {
     "psr-4": {
       "App\\": "app/",
