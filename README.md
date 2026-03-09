@@ -1,15 +1,17 @@
-# MaplePHP CLI App
+# MaplePHP Framework - Made for developers who still enjoy programming
 
-A lightweight CLI application skeleton built on the MaplePHP ecosystem. It provides a modern command-line framework with routing, controllers, dependency injection, services, and PSR-compatible components so you can build any CLI application or automation tool.
+MaplePHP is a high performance PHP framework built on PSR standards and modern best practices. It includes the core components needed for real applications such as MVC, dependency injection, routing, caching, logging, error handling, HTTP clients, and support for both web and CLI environments.
 
-This project is intended to be installed using Composer’s `create-project` and serves as the starting point for CLI applications.
+The goal is not to lock developers into a fixed ecosystem. MaplePHP gives you a robust core while letting you use the libraries and tools you prefer. You can shape the framework around your own stack and workflow, while still benefiting from updates and improvements to the core. This keeps your project flexible, maintainable, and truly yours.
+
+Your code. Your libraries. Your framework.
 
 ## Installation
 
 Create a new project:
 
 ```bash
-composer create-project maplephp/cli-app my-app
+composer create-project maplephp/maplephp my-app
 cd my-app
 ````
 
@@ -39,7 +41,10 @@ my-app/
 ├── app/
 │   ├── Controllers/
 │   └── Services/
+├── configs/
+├── public/
 ├── routers/
+├── storage/
 ├── vendor/
 ```
 
