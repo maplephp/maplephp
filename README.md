@@ -11,7 +11,7 @@ Your code. Your libraries. Your framework.
 Create a new project:
 
 ```bash
-composer create-project maplephp/maplephp my-app
+composer create-project maplephp/framework my-app --stability=beta
 cd my-app
 ````
 
