@@ -1,5 +1,5 @@
 <?php
 
 return [
-	// MaplePHP\Core\Providers\TestServiceProvider::class,
+	\MaplePHP\Core\Providers\DatabaseProvider::class,
 ];

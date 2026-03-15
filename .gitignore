@@ -1,6 +1,7 @@
 ._*
 .DS_Store
 .sass-cache
+*.sqlite
 composer.lock
 composer.local.json
 composer.local.lock

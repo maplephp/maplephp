@@ -34,7 +34,8 @@
   "autoload": {
     "psr-4": {
       "App\\": "app/",
-      "Configs\\": "configs/"
+      "Configs\\": "configs/",
+      "Migrations\\": "database/migrations"
     }
   },
   "extra": {
