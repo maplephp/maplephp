@@ -9,7 +9,7 @@ use MaplePHP\Core\Routing\DefaultController;
 use MaplePHP\Http\Interfaces\PathInterface;
 
 
-class StartController extends DefaultController
+class HelloWorldController extends DefaultController
 {
 	/**
 	 * Default route example.

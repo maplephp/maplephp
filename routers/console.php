@@ -5,8 +5,9 @@
  * @var RouterDispatcher $router
  */
 
-use App\Controllers\Cli\TestController;
 use MaplePHP\Core\Router\RouterDispatcher;
+//use App\Commands\TestCommand;
 
-$router->cli("/run", [TestController::class, "index"]);
+// Run in CLI: `./maple make --type=command --name=Test`
+//$router->cli("test", [TestCommand::class, "index"]);
 

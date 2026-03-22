@@ -17,8 +17,8 @@
  * {lang:(en|sv|de)}   Restricts parameter to specific values. (Example: /{lang}/docs)
  */
 
-use App\Controllers\StartController;
+use App\Controllers\HelloWorldController;
 use MaplePHP\Core\Router\RouterDispatcher;
 
-$router->get("/", [StartController::class, "index"]);
-$router->get("/{page}", [StartController::class, "show"]);
+$router->get("/", [HelloWorldController::class, "index"]);
+$router->get("/{page}", [HelloWorldController::class, "show"]);
