@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ code }} — Error</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #fafafa;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 24px;
+        }
+        .card {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 48px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+        .code {
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+            color: #d1d5db;
+            margin-bottom: 16px;
+        }
+        h1 {
+            font-size: 1.5rem;
+            margin: 0 0 12px;
+        }
+        p {
+            color: #6b7280;
+            margin: 0 0 32px;
+        }
+        a {
+            display: inline-block;
+            padding: 10px 24px;
+            background: #1a1a1a;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        a:hover { background: #333; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="code">{{ code }}</div>
+        <h1>{{ message }}</h1>
+        <p>{{ uri }}</p>
+        <a href="/">Go home</a>
+    </div>
+</body>
+</html>
