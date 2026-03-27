@@ -22,6 +22,7 @@ The goal is not to lock you into a fixed ecosystem. Each `maplephp/*` library is
 - [Middleware](#middleware)
 - [Database](#database)
 - [Validation](#validation)
+- [Aborting Requests](#aborting-requests)
 - [Error Handling](#error-handling)
 - [Caching](#caching)
 - [Logging](#logging)
@@ -577,19 +578,133 @@ use MaplePHP\Validate\Validator;
 
 // Option 1: Create an instance
 $v = new Validator($email);
-if ($v->isEmail() && $v->length(5, 255)) {
-    // value is valid
+if (!($v->isEmail() && $v->length(5, 255))) {
+    abort(422, 'Invalid email address');
 }
 
 // Option 2: Use the static method for cleaner syntax
-if (Validator::value($email)->isEmail(1, 200)) {
-    // value is valid
+if (!Validator::value($email)->isEmail(1, 200)) {
+    abort(422, 'Invalid email address');
 }
 ```
 
 ### Available Validators
 
 Visit the [maplephp/validate](https://github.com/maplephp/validate) repository for a complete list of validators.
+
+---
+
+## Aborting Requests
+
+The global `abort()` function is the standard way to stop a request and return an HTTP error response. It throws an `HttpException` that the `HttpStatusError` middleware catches and renders as an error page.
+
+```php
+// Trigger a 404
+abort(404);
+
+// With a custom message
+abort(404, 'User not found');
+
+// With extra props forwarded to the error page renderer
+abort(403, 'Access denied', ['required_role' => 'admin']);
+```
+
+`abort()` can be called from anywhere — controllers, services, commands. No `return` is needed; execution stops at the throw.
+
+### Aborting After Validation
+
+A common pattern is to abort immediately when input validation fails:
+
+```php
+use MaplePHP\Validate\ValidationChain;
+
+public function store(ResponseInterface $response, ServerRequestInterface $request): ResponseInterface
+{
+    $body  = $request->getParsedBody();
+
+    $email = new ValidationChain($body['email'] ?? '');
+    $email->isEmail()->length(5, 255);
+
+    if ($email->hasError()) {
+        abort(422, 'Invalid email address');
+    }
+
+    // continue processing ...
+    return $response;
+}
+```
+
+### Passing Props to the Error Page
+
+The third `$props` argument is forwarded as part of `$context` in `ErrorPageInterface::render()`, making it available to custom error page templates:
+
+```php
+abort(403, 'Access denied', ['redirect' => '/login']);
+```
+
+In the error page renderer: `$context['redirect']` will be `'/login'`.
+
+---
+
+## Custom HTTP Error Pages
+
+By default, `HttpStatusError` renders a built-in styled page for any `abort()` call or non-2xx response. The page shows the status code, a message, and a "Go home" link.
+
+To replace it, implement `MaplePHP\Core\Interfaces\ErrorPageInterface`:
+
+```php
+// app/Errors/MyErrorPage.php
+namespace App\Errors;
+
+use MaplePHP\Core\Interfaces\ErrorPageInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+class MyErrorPage implements ErrorPageInterface
+{
+    public function render(
+        ResponseInterface      $response,
+        ServerRequestInterface $request,
+        array                  $context = []
+    ): string {
+        $code    = $response->getStatusCode();
+        $message = $context['message'] ?? $response->getReasonPhrase();
+
+        // Return an HTML string — require a view file, use a template engine, etc.
+        ob_start();
+        require App::get()->dir()->resources() . '/errors/error.php';
+        return ob_get_clean();
+    }
+}
+```
+
+Available in `render()`:
+
+| Variable | Source | Description |
+|---|---|---|
+| `$response->getStatusCode()` | PSR-7 | HTTP status code (404, 403, 500, …) |
+| `$response->getReasonPhrase()` | PSR-7 | Default HTTP reason phrase |
+| `$context['message']` | `abort()` arg 2 | Custom message passed to `abort()` |
+| `$context[*]` | `abort()` arg 3 | Any props from the third `abort()` argument |
+| `$request->getUri()` | PSR-7 | The current request URI |
+
+Register the custom renderer in `configs/http.php` by passing it directly to `HttpStatusError`:
+
+```php
+// configs/http.php
+use App\Errors\MyErrorPage;
+use MaplePHP\Core\Middlewares\HttpStatusError;
+use MaplePHP\Emitron\Middlewares\ContentLengthMiddleware;
+
+return [
+    "middleware" => [
+        "global" => [
+            new HttpStatusError(new MyErrorPage()),
+            ContentLengthMiddleware::class,
+        ]
+    ]
+];
+```
 
 ---
 
