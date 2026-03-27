@@ -38,7 +38,7 @@ The goal is not to lock you into a fixed ecosystem. Each `maplephp/*` library is
 ### Installation
 
 ```bash
-composer create-project maplephp/framework my-app --stability=beta
+composer create-project maplephp/maplephp my-app --stability=beta
 cd my-app
 ./maple serve
 ```
