@@ -24,6 +24,7 @@ The goal is not to lock you into a fixed ecosystem. Each `maplephp/*` library is
 - [Validation](#validation)
 - [Aborting Requests](#aborting-requests)
 - [Error Handling](#error-handling)
+- [Twig Templates](#twig-templates)
 - [Caching](#caching)
 - [Logging](#logging)
 - [CLI Commands](#cli-commands)
@@ -700,6 +701,108 @@ return [
     "middleware" => [
         "global" => [
             new HttpStatusError(new MyErrorPage()),
+            ContentLengthMiddleware::class,
+        ]
+    ]
+];
+```
+
+---
+
+## Twig Templates
+
+MaplePHP ships with built-in Twig support via `TwigServiceProvider` and the `MaplePHP\Core\Support\Twig` helper. Enable it by adding the provider to `configs/providers.php`:
+
+```php
+// configs/providers.php
+return [
+    \MaplePHP\Core\Providers\DatabaseProvider::class,
+    \MaplePHP\Core\Providers\TwigServiceProvider::class, // Remove this line if you don't use Twig
+];
+```
+
+The provider registers a `Twig\Environment` in the container, using `resources/` as the template root. It enables file caching in production and debug mode in development automatically.
+
+### Template Structure
+
+```
+resources/
+├── index.twig          # Base layout — extend this in every view
+├── views/              # View templates
+│   └── hello.twig
+└── errors/             # Error page templates (used by TwigErrorPage)
+    └── error.twig
+```
+
+### Layout and Inheritance
+
+`resources/index.twig` is the base layout. Define your shared `<html>`, `<head>`, and chrome there, and expose named blocks for child templates to fill in:
+
+A child view extends it and fills the blocks:
+
+### Rendering in a Controller
+
+Inject `MaplePHP\Core\Support\Twig` as a parameter — the framework resolves it automatically. Call `render()` with a path relative to `resources/` and an array of template variables:
+
+```php
+// app/Controllers/HelloController.php
+namespace App\Controllers;
+
+use MaplePHP\Core\Routing\DefaultController;
+use MaplePHP\Core\Support\Twig;
+use MaplePHP\Http\Interfaces\PathInterface;
+use Psr\Http\Message\ResponseInterface;
+
+class HelloController extends DefaultController
+{
+    public function show(Twig $twig, PathInterface $path): void
+    {
+        $twig->render('views/hello.twig', [
+            'title' => 'Hello',
+            'name'  => $path->select("name")->last() ?: 'World',
+        ])
+    }
+}
+```
+
+`render()` writes the rendered HTML to the response body, and returns the `ResponseInterface` instance for further processing if you wish.
+
+To add globals, extensions, or filters, access the underlying environment via `$twig->getEnvironment()`:
+
+```php
+$twig->getEnvironment()->addGlobal('app_name', 'My App');
+```
+
+### Twig Error Pages
+
+`TwigErrorPage` renders `resources/errors/error.twig` and passes the following variables:
+
+| Variable | Description |
+|---|---|
+| `{{ code }}` | HTTP status code (404, 500, …) |
+| `{{ message }}` | Reason phrase or custom `abort()` message |
+| `{{ uri }}` | The request URI that triggered the error |
+| `{{ context }}` | Full context array from `abort()` |
+
+---
+
+## Error page
+
+To render HTTP error responses with;
+* Twig, register `TwigErrorPage` in `configs/http.php`:
+* Vanilla, register `HttpStatusError::class` in `configs/http.php`:
+
+```php
+// configs/http.php
+use MaplePHP\Core\Middlewares\HttpStatusError;
+use MaplePHP\Core\Render\Errors\TwigErrorPage;
+use MaplePHP\Emitron\Middlewares\ContentLengthMiddleware;
+
+return [
+    "middleware" => [
+        "global" => [
+            // HttpStatusError::class, // Will load PHP vanilla HTTP Status Error page
+            // new HttpStatusError(new TwigErrorPage()), // Will load Twig HTTP Status Error page
             ContentLengthMiddleware::class,
         ]
     ]
