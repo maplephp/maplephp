@@ -5,8 +5,8 @@
  */
 
 return [
-    'app_title' => getenv('APP_TITLE'),
-    'env' => getenv('APP_ENV'),
+    'app_title' => env('APP_TITLE'),
+    'env' => env('APP_ENV'),
     'timezone' => 'UTC',
     'locale' => 'en_US'
 ];
