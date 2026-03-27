@@ -4,7 +4,7 @@ MaplePHP is a high-performance PHP 8.2+ framework built on PSR standards and mod
 
 The goal is not to lock you into a fixed ecosystem. Each `maplephp/*` library is independently installable and PSR-compliant. You shape the framework around your own stack and workflow, while still benefiting from updates to the core.
 
-**Requires PHP 8.2+** | PSR-3, PSR-7, PSR-11, PSR-15 | Apache-2.0
+**Requires PHP 8.2+**
 
 > This framework is currently in beta. Use `--stability=beta` when installing.
 
@@ -124,7 +124,6 @@ $app->dir()->configs();         // /path/to/my-app/configs
 $app->dir()->app();             // /path/to/my-app/app
 $app->dir()->logs();            // /path/to/my-app/logs
 $app->dir()->cache();           // /path/to/my-app/storage/cache
-$app->dir()->cacheFramework();  // /path/to/my-app/storage/cache/framework
 $app->dir()->migrations();      // /path/to/my-app/database/migrations
 ```
 
