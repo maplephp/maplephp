@@ -25,4 +25,4 @@ use App\Controllers\HelloWorldController;
 use MaplePHP\Core\Router\RouterDispatcher;
 
 $router->get("/", [HelloWorldController::class, "index"]);
-$router->get("/show", [HelloWorldController::class, "show"]);
+$router->get("/hello/{name}", [HelloWorldController::class, "show"]);

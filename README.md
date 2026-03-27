@@ -22,7 +22,9 @@ The goal is not to lock you into a fixed ecosystem. Each `maplephp/*` library is
 - [Middleware](#middleware)
 - [Database](#database)
 - [Validation](#validation)
+- [Aborting Requests](#aborting-requests)
 - [Error Handling](#error-handling)
+- [Twig Templates](#twig-templates)
 - [Caching](#caching)
 - [Logging](#logging)
 - [CLI Commands](#cli-commands)
@@ -577,19 +579,235 @@ use MaplePHP\Validate\Validator;
 
 // Option 1: Create an instance
 $v = new Validator($email);
-if ($v->isEmail() && $v->length(5, 255)) {
-    // value is valid
+if (!($v->isEmail() && $v->length(5, 255))) {
+    abort(422, 'Invalid email address');
 }
 
 // Option 2: Use the static method for cleaner syntax
-if (Validator::value($email)->isEmail(1, 200)) {
-    // value is valid
+if (!Validator::value($email)->isEmail(1, 200)) {
+    abort(422, 'Invalid email address');
 }
 ```
 
 ### Available Validators
 
 Visit the [maplephp/validate](https://github.com/maplephp/validate) repository for a complete list of validators.
+
+---
+
+## Aborting Requests
+
+The global `abort()` function is the standard way to stop a request and return an HTTP error response. It throws an `HttpException` that the `HttpStatusError` middleware catches and renders as an error page.
+
+```php
+// Trigger a 404
+abort(404);
+
+// With a custom message
+abort(404, 'User not found');
+
+// With extra props forwarded to the error page renderer
+abort(403, 'Access denied', ['required_role' => 'admin']);
+```
+
+`abort()` can be called from anywhere — controllers, services, commands. No `return` is needed; execution stops at the throw.
+
+### Aborting After Validation
+
+A common pattern is to abort immediately when input validation fails:
+
+```php
+use MaplePHP\Validate\ValidationChain;
+
+public function store(ResponseInterface $response, ServerRequestInterface $request): ResponseInterface
+{
+    $body  = $request->getParsedBody();
+
+    $email = new ValidationChain($body['email'] ?? '');
+    $email->isEmail()->length(5, 255);
+
+    if ($email->hasError()) {
+        abort(422, 'Invalid email address');
+    }
+
+    // continue processing ...
+    return $response;
+}
+```
+
+### Passing Props to the Error Page
+
+The third `$props` argument is forwarded as part of `$context` in `ErrorPageInterface::render()`, making it available to custom error page templates:
+
+```php
+abort(403, 'Access denied', ['redirect' => '/login']);
+```
+
+In the error page renderer: `$context['redirect']` will be `'/login'`.
+
+---
+
+## Custom HTTP Error Pages
+
+By default, `HttpStatusError` renders a built-in styled page for any `abort()` call or non-2xx response. The page shows the status code, a message, and a "Go home" link.
+
+To replace it, implement `MaplePHP\Core\Interfaces\ErrorPageInterface`:
+
+```php
+// app/Errors/MyErrorPage.php
+namespace App\Errors;
+
+use MaplePHP\Core\Interfaces\ErrorPageInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+class MyErrorPage implements ErrorPageInterface
+{
+    public function render(
+        ResponseInterface      $response,
+        ServerRequestInterface $request,
+        array                  $context = []
+    ): string {
+        $code    = $response->getStatusCode();
+        $message = $context['message'] ?? $response->getReasonPhrase();
+
+        // Return an HTML string — require a view file, use a template engine, etc.
+        ob_start();
+        require App::get()->dir()->resources() . '/errors/error.php';
+        return ob_get_clean();
+    }
+}
+```
+
+Available in `render()`:
+
+| Variable | Source | Description |
+|---|---|---|
+| `$response->getStatusCode()` | PSR-7 | HTTP status code (404, 403, 500, …) |
+| `$response->getReasonPhrase()` | PSR-7 | Default HTTP reason phrase |
+| `$context['message']` | `abort()` arg 2 | Custom message passed to `abort()` |
+| `$context[*]` | `abort()` arg 3 | Any props from the third `abort()` argument |
+| `$request->getUri()` | PSR-7 | The current request URI |
+
+Register the custom renderer in `configs/http.php` by passing it directly to `HttpStatusError`:
+
+```php
+// configs/http.php
+use App\Errors\MyErrorPage;
+use MaplePHP\Core\Middlewares\HttpStatusError;
+use MaplePHP\Emitron\Middlewares\ContentLengthMiddleware;
+
+return [
+    "middleware" => [
+        "global" => [
+            new HttpStatusError(new MyErrorPage()),
+            ContentLengthMiddleware::class,
+        ]
+    ]
+];
+```
+
+---
+
+## Twig Templates
+
+MaplePHP ships with built-in Twig support via `TwigServiceProvider` and the `MaplePHP\Core\Support\Twig` helper. Enable it by adding the provider to `configs/providers.php`:
+
+```php
+// configs/providers.php
+return [
+    \MaplePHP\Core\Providers\DatabaseProvider::class,
+    \MaplePHP\Core\Providers\TwigServiceProvider::class, // Remove this line if you don't use Twig
+];
+```
+
+The provider registers a `Twig\Environment` in the container, using `resources/` as the template root. It enables file caching in production and debug mode in development automatically.
+
+### Template Structure
+
+```
+resources/
+├── index.twig          # Base layout — extend this in every view
+├── views/              # View templates
+│   └── hello.twig
+└── errors/             # Error page templates (used by TwigErrorPage)
+    └── error.twig
+```
+
+### Layout and Inheritance
+
+`resources/index.twig` is the base layout. Define your shared `<html>`, `<head>`, and chrome there, and expose named blocks for child templates to fill in:
+
+A child view extends it and fills the blocks:
+
+### Rendering in a Controller
+
+Inject `MaplePHP\Core\Support\Twig` as a parameter — the framework resolves it automatically. Call `render()` with a path relative to `resources/` and an array of template variables:
+
+```php
+// app/Controllers/HelloController.php
+namespace App\Controllers;
+
+use MaplePHP\Core\Routing\DefaultController;
+use MaplePHP\Core\Support\Twig;
+use MaplePHP\Http\Interfaces\PathInterface;
+use Psr\Http\Message\ResponseInterface;
+
+class HelloController extends DefaultController
+{
+    public function show(Twig $twig, PathInterface $path): void
+    {
+        $twig->render('views/hello.twig', [
+            'title' => 'Hello',
+            'name'  => $path->select("name")->last() ?: 'World',
+        ])
+    }
+}
+```
+
+`render()` writes the rendered HTML to the response body, and returns the `ResponseInterface` instance for further processing if you wish.
+
+To add globals, extensions, or filters, access the underlying environment via `$twig->getEnvironment()`:
+
+```php
+$twig->getEnvironment()->addGlobal('app_name', 'My App');
+```
+
+### Twig Error Pages
+
+`TwigErrorPage` renders `resources/errors/error.twig` and passes the following variables:
+
+| Variable | Description |
+|---|---|
+| `{{ code }}` | HTTP status code (404, 500, …) |
+| `{{ message }}` | Reason phrase or custom `abort()` message |
+| `{{ uri }}` | The request URI that triggered the error |
+| `{{ context }}` | Full context array from `abort()` |
+
+---
+
+## Error page
+
+To render HTTP error responses with;
+* Twig, register `TwigErrorPage` in `configs/http.php`:
+* Vanilla, register `HttpStatusError::class` in `configs/http.php`:
+
+```php
+// configs/http.php
+use MaplePHP\Core\Middlewares\HttpStatusError;
+use MaplePHP\Core\Render\Errors\TwigErrorPage;
+use MaplePHP\Emitron\Middlewares\ContentLengthMiddleware;
+
+return [
+    "middleware" => [
+        "global" => [
+            // HttpStatusError::class, // Will load PHP vanilla HTTP Status Error page
+            // new HttpStatusError(new TwigErrorPage()), // Will load Twig HTTP Status Error page
+            ContentLengthMiddleware::class,
+        ]
+    ]
+];
+```
 
 ---
 

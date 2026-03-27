@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use MaplePHP\Core\Render\StaticRenderer;
+use MaplePHP\Core\Support\Twig;
+use MaplePHP\DTO\Format\Clock;
 use Psr\Http\Message\ResponseInterface;
 use MaplePHP\Core\Routing\DefaultController;
 use MaplePHP\Http\Interfaces\PathInterface;
-
 
 class HelloWorldController extends DefaultController
 {
@@ -18,30 +20,33 @@ class HelloWorldController extends DefaultController
 	 * modified response is returned to the framework.
 	 *
 	 * @param ResponseInterface $response Response instance used to write output
-	 * @param PathInterface $path Provides access to route parameters and segments
+	 * @param StaticRenderer $render
 	 * @return ResponseInterface
 	 */
-    public function index(ResponseInterface $response, PathInterface $path): ResponseInterface
-    {
-        $response->getBody()->write("Hello World!<br>");
-	    $response->getBody()->write("<a href='" . $path->uri()->withPath("/show") . "'>Show</a>");
-        return $response;
-    }
+	public function index(ResponseInterface $response, StaticRenderer $render): ResponseInterface
+	{
+		$html = $render->welcome();
+		$response->getBody()->write($html);
+		return $response;
+	}
 
 	/**
-	 * Example route demonstrating how to read values from the path.
+	 * Twig-rendered example page.
+	 * Renders resources/views/hello.twig with a set of props passed as template variables.
 	 *
-	 * The response body is written to using the PSR-7 stream and the
-	 * modified response is returned to the framework.
-	 *
-	 * @param ResponseInterface $response Response instance used to write output
-	 * @param PathInterface $path Provides access to route parameters and segments
-	 * @return ResponseInterface
+	 * @param Twig $twig
+	 * @param PathInterface $path
+	 * @throws \Exception
 	 */
-	public function show(ResponseInterface $response, PathInterface $path): ResponseInterface
+	public function show(Twig $twig, PathInterface $path): void
 	{
-		$response->getBody()->write("Hello World 2!<br>");
-		$response->getBody()->write("Hello form: " . $path->select("page")->last());
-		return $response;
+		$name = $path->select("name")->last() ?: 'World';
+
+		$twig->render('views/hello.twig', [
+			'title' => 'Hello from Twig',
+			'name' => $name,
+			'rendered_at' => Clock::value('now')->dateTime(),
+			'items' => ['Twig templates', 'PSR-7 responses', 'Dependency injection'],
+		]);
 	}
 }
