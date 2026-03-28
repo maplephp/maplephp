@@ -20,7 +20,6 @@
  *
  * {lang:(en|sv|de)}   Restricts parameter to specific values. (Example: /{lang}/docs)
  */
-
 use App\Controllers\HelloWorldController;
 use MaplePHP\Core\Router\RouterDispatcher;
 
